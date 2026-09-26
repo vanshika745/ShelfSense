@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Dataset (download from UCI; too large for GitHub)
+data/*.xlsx
+data/*.csv
+data/*.zip
+
+# Generated results
+outputs/
+
+# Office temp files
+~$*.docx
