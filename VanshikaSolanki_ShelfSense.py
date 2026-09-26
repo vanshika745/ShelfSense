@@ -54,6 +54,7 @@ from sklearn.preprocessing import StandardScaler
 APP_DIR = Path(__file__).resolve().parent
 DATA_DIR = APP_DIR / "data"
 OUTPUT_DIR = APP_DIR / "outputs"
+DEMO_PARQUET = DATA_DIR / "online_retail_II.parquet"   # compact copy (6 MB), used online
 DEMO_CSV = DATA_DIR / "online_retail_II.csv"
 DEMO_XLSX = DATA_DIR / "online_retail_II.xlsx"
 DATASET_URL = "https://archive.ics.uci.edu/dataset/502/online+retail+ii"
@@ -160,9 +161,21 @@ def read_table(data: bytes, name: str) -> pd.DataFrame:
     raise ValueError("Could not read the file. Save it as CSV (UTF-8) or Excel.")
 
 
-def load_demo_data() -> pd.DataFrame:
-    """Load the UCI Online Retail II demo dataset from data/ (Excel is converted
-    to CSV once, because reading 1 million Excel rows is slow)."""
+QUICK_DEMO_START = "2010-12-01"   # quick demo = last 12 months of the dataset
+
+
+def load_demo_data(quick=False) -> pd.DataFrame:
+    """Load the UCI Online Retail II demo dataset from data/. The compact Parquet
+    copy is used when present; otherwise the Excel file is converted to CSV once,
+    because reading 1 million Excel rows is slow. quick=True returns only the
+    last 12 months (about 560k rows), which needs about half the memory."""
+    if DEMO_PARQUET.is_file():
+        if quick:
+            return pd.read_parquet(DEMO_PARQUET, filters=[("InvoiceDate", ">=", QUICK_DEMO_START)])
+        return pd.read_parquet(DEMO_PARQUET)
+    if quick:
+        d = load_demo_data()
+        return d[d["InvoiceDate"].astype("string") >= QUICK_DEMO_START].reset_index(drop=True)
     if DEMO_CSV.is_file():
         return pd.read_csv(DEMO_CSV, dtype=str)
     if DEMO_XLSX.is_file():
@@ -694,15 +707,20 @@ def train_forecaster(sales, meta, progress=None):
         return None
     if progress:
         progress("Training demand forecast model (Gradient Boosting)")
+    # With less than a year of history some features (e.g. same weeks last year) are
+    # completely empty; they carry no information, so they are left out.
+    feats = [f for f in FC_FEATURES if train[f].notna().any()]
     model = HistGradientBoostingRegressor(loss="poisson", max_iter=400, learning_rate=0.05,
                                           random_state=RANDOM_STATE)
-    model.fit(train[FC_FEATURES], train["target"])
+    model.fit(train[feats], train["target"])
     preds = {
         "Naive: last 4 weeks": test["sum4"],
         "Moving average (12 weeks)": test["mean12"] * 4,
         "Seasonal naive: same weeks last year": test["ly_next4"].fillna(test["sum4"]),
-        "Gradient Boosting (AI)": pd.Series(model.predict(test[FC_FEATURES]), index=test.index),
+        "Gradient Boosting (AI)": pd.Series(model.predict(test[feats]), index=test.index),
     }
+    if test["ly_next4"].isna().all():   # no last-year data: this method would just copy "Naive"
+        del preds["Seasonal naive: same weeks last year"]
     rows = []
     for name, p in preds.items():
         err = p - test["target"]
@@ -719,8 +737,8 @@ def train_forecaster(sales, meta, progress=None):
     # Forecast the next 4 weeks from the latest week
     latest = gd[gd["week"] == T].set_index("key")
     if best == "Gradient Boosting (AI)":
-        model.fit(gd.loc[gd["target"].notna(), FC_FEATURES], gd.loc[gd["target"].notna(), "target"])
-        fc = pd.Series(model.predict(latest[FC_FEATURES]), index=latest.index)
+        model.fit(gd.loc[gd["target"].notna(), feats], gd.loc[gd["target"].notna(), "target"])
+        fc = pd.Series(model.predict(latest[feats]), index=latest.index)
     elif best.startswith("Naive"):
         fc = latest["sum4"]
     elif best.startswith("Moving"):
@@ -1098,6 +1116,13 @@ def _cached_demo():
     return load_demo_data()
 
 
+@st.cache_resource(show_spinner=False, max_entries=1)
+def _cached_quick_demo():
+    """Last 12 months of the demo (Dec 2010 - Dec 2011, about 540k rows): uses about
+    half the memory, which keeps the app within free cloud hosting limits."""
+    return load_demo_data(quick=True)
+
+
 def _mapping_form(columns, fields, detected, key_prefix):
     mapping = {}
     cols = st.columns(3)
@@ -1126,8 +1151,11 @@ def app():
     # ---------------- Sidebar ----------------
     with st.sidebar:
         st.header("1. Data")
-        src = st.radio("Sales data source", ["Upload my file", "Demo: UCI Online Retail II"],
-                       help="Demo = 1 million real transactions of a UK gift wholesaler (2009-2011).")
+        src = st.radio("Sales data source", ["Upload my file", "Demo: UCI Online Retail II",
+                                             "Demo (quick): last 12 months"],
+                       help="Demo = 1 million real transactions of a UK gift wholesaler (2009-2011). "
+                            "Quick demo = the last 12 months only (about 540,000 rows): faster and "
+                            "lighter, recommended for the online version.")
         raw, file_key, source = None, None, None
         if src == "Upload my file":
             up = st.file_uploader("Sales file (CSV or Excel)", type=["csv", "xlsx", "xls"])
@@ -1140,10 +1168,12 @@ def app():
                 except Exception as e:
                     st.error(f"Could not read the file: {e}")
         else:
+            quick = src.startswith("Demo (quick)")
             try:
-                with st.spinner("Loading demo dataset (first time: about 1-2 minutes)..."):
-                    raw = _cached_demo()
-                file_key, source = "demo-online-retail-ii", "UCI Online Retail II (demo)"
+                with st.spinner("Loading demo dataset..."):
+                    raw = _cached_quick_demo() if quick else _cached_demo()
+                file_key = "demo-quick" if quick else "demo-online-retail-ii"
+                source = "UCI Online Retail II (quick demo)" if quick else "UCI Online Retail II (demo)"
             except FileNotFoundError as e:
                 st.error(str(e))
         st.header("2. Settings")

@@ -9,6 +9,8 @@ ShelfSense is an interactive data analytics and AI web app. A shopkeeper uploads
 - tells the shopkeeper **what to reorder, what to discount and what to stop stocking**,
 - produces downloadable reports.
 
+🔗 **Live app:** https://shelfsense-vanshika.streamlit.app  ·  **Project page:** _coming soon_
+
 > Project for the **IBM SkillsBuild Data Analytics with AI Internship 2026** (BharatCares in association with AICTE) · Supports **UN SDG 12: Responsible Consumption and Production**
 
 ![ShelfSense dashboard](screenshots/dashboard.png)
@@ -43,6 +45,7 @@ Kirana stores, pharmacies and small retailers lose money in three ways: stock th
 - 1,067,371 real transactions of a UK online giftware retailer, 01 Dec 2009 – 09 Dec 2011
 - Columns: `Invoice, StockCode, Description, Quantity, InvoiceDate, Price, Customer ID, Country`
 - It is used as the **demo dataset**. Any shop's own sales file can be uploaded instead.
+- A compact copy is included in this repository as `data/online_retail_II.parquet` (6 MB, same 1,067,371 rows), so the demo works without downloading anything.
 - The dataset has no stock or expiry data. For the demo, the app offers a **clearly labelled simulated stock sheet** to show the stock features. Simulated values are never reported as results.
 
 Citation: Chen, D. (2012). *Online Retail II* [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5CG6D
@@ -61,8 +64,10 @@ ShelfSense/
 ├── VanshikaSolanki_ProjectReport.docx   # project report
 ├── .streamlit/config.toml               # app theme and upload size
 ├── data/
-│   └── README.md                        # where to put the dataset
+│   ├── online_retail_II.parquet         # demo dataset (compact copy, 6 MB)
+│   └── README.md                        # dataset source and licence
 ├── screenshots/                         # images used in this README
+├── site/                                # project showcase web page (deployed on Vercel)
 └── outputs/                             # created when you run the command-line mode
 ```
 
@@ -74,7 +79,7 @@ ShelfSense/
 pip install -r requirements.txt
 ```
 
-**Demo dataset (optional):** download `online+retail+ii.zip` from the UCI link above, unzip it and put `online_retail_II.xlsx` in the `data/` folder.
+**Demo dataset:** already included (`data/online_retail_II.parquet`). Alternatively, download `online+retail+ii.zip` from the UCI link above and put `online_retail_II.xlsx` in the `data/` folder.
 
 ## How to Run
 
@@ -84,11 +89,11 @@ pip install -r requirements.txt
 streamlit run VanshikaSolanki_ShelfSense.py
 ```
 
-1. In the sidebar, choose **Upload my file** or **Demo: UCI Online Retail II**.
+1. In the sidebar, choose **Upload my file**, **Demo: UCI Online Retail II** (full, 1.07M rows) or **Demo (quick): last 12 months** (about 560k rows, faster; best for the online version).
 2. On the **Data** tab, check the column mapping and press **🚀 Clean & analyse**.
 3. Explore the tabs: Quality & Cleaning → Dashboard → ABC-XYZ → AI Insights → Reorder & Stock → What-if → Report.
 
-For the 1-million-row demo, the first analysis takes about 1.5–3 minutes. After that every tab responds instantly. Small shop files take a few seconds.
+For the full 1-million-row demo, the first analysis takes about 1.5–3 minutes (the quick demo about 40 seconds). After that every tab responds instantly. Small shop files take a few seconds.
 
 **Command-line mode** (runs the full analysis and saves `outputs/ShelfSense_Report.html`, `outputs/ShelfSense_Results.xlsx` and `outputs/results_summary.json`):
 

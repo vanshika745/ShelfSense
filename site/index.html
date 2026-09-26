@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShelfSense · Dead-Stock, Expiry &amp; Reorder Analyzer</title>
+<meta name="description" content="ShelfSense turns a small shop's sales file into inventory decisions: data cleaning, ABC-XYZ analysis, AI dead-stock prediction and demand forecasting. A project by Vanshika Solanki.">
+<meta property="og:title" content="ShelfSense · Dead-Stock, Expiry & Reorder Analyzer">
+<meta property="og:description" content="Interactive data analytics + AI app for small shops. IBM SkillsBuild Data Analytics with AI Internship 2026.">
+<meta property="og:image" content="assets/dashboard.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --g: #2f6b4f; --g2: #3f8a66; --gl: #e8f1ec; --ink: #16201b; --mut: #56625c;
+    --line: #dde5e0; --bg: #ffffff; --soft: #f5f8f6; --acc: #d9822b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --g: #5fb58a; --g2: #4a9d75; --gl: #1b2b23; --ink: #e8efeb; --mut: #a4b3ab;
+      --line: #2a3a32; --bg: #0f1613; --soft: #141e19; --acc: #f0a45a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: Inter, "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--bg);
+         line-height: 1.6; font-size: 16px; }
+  a { color: var(--g); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  header.top { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent);
+               backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; height: 58px; }
+  .brand { font-weight: 800; font-size: 18px; color: var(--ink); text-decoration: none; }
+  nav a { color: var(--mut); text-decoration: none; margin-left: 18px; font-size: 14px; font-weight: 500; }
+  nav a:hover { color: var(--g); }
+  .hero { padding: 64px 0 40px; }
+  .eyebrow { display: inline-block; background: var(--gl); color: var(--g); border-radius: 999px; padding: 4px 12px;
+             font-size: 13px; font-weight: 600; }
+  h1 { font-size: clamp(34px, 6vw, 56px); line-height: 1.08; margin: 16px 0 14px; letter-spacing: -0.02em; }
+  h1 span { color: var(--g); }
+  .lead { font-size: clamp(17px, 2.2vw, 20px); color: var(--mut); max-width: 720px; margin: 0 0 26px; }
+  .btns { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 10px; font-weight: 600;
+         text-decoration: none; font-size: 15px; border: 1px solid var(--line); color: var(--ink); background: var(--bg); }
+  .btn.primary { background: var(--g); border-color: var(--g); color: #fff; }
+  .btn:hover { transform: translateY(-1px); }
+  .shot { display: block; width: 100%; border-radius: 14px; border: 1px solid var(--line);
+          box-shadow: 0 18px 50px -20px rgba(0,0,0,.35); margin-top: 36px; }
+  section { padding: 56px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: clamp(26px, 3.6vw, 34px); margin: 0 0 10px; letter-spacing: -0.01em; }
+  .sub { color: var(--mut); margin: 0 0 28px; max-width: 760px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .card { background: var(--soft); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+  .card h3 { margin: 6px 0 6px; font-size: 17px; }
+  .card p { margin: 0; color: var(--mut); font-size: 15px; }
+  .ic { font-size: 24px; }
+  .stats { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+  .stat { border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .stat b { display: block; font-size: 30px; color: var(--g); letter-spacing: -0.02em; line-height: 1.1; }
+  .stat span { color: var(--mut); font-size: 14px; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .flow span { background: var(--gl); color: var(--g); border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 14px; }
+  .flow i { color: var(--mut); font-style: normal; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; margin: 8px 0 6px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--mut); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+  tr.best td { font-weight: 700; color: var(--g); }
+  .tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; padding: 4px 8px; }
+  .note { color: var(--mut); font-size: 14px; }
+  .gallery { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .gallery figure { margin: 0; }
+  .gallery img { width: 100%; border-radius: 12px; border: 1px solid var(--line); }
+  .gallery figcaption { font-size: 14px; color: var(--mut); margin-top: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips span { border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 14px; }
+  footer { border-top: 1px solid var(--line); padding: 30px 0 50px; color: var(--mut); font-size: 14px; }
+  .two { display: grid; gap: 28px; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 760px) { .two { grid-template-columns: 1fr; } nav { display: none; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#">📦 ShelfSense</a>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#ai">AI &amp; results</a>
+      <a href="#screens">Screens</a>
+      <a href="#about">About</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <span class="eyebrow">IBM SkillsBuild · Data Analytics with AI Internship 2026</span>
+    <h1>Stop guessing what to <span>reorder</span>.</h1>
+    <p class="lead">ShelfSense turns a small shop's ordinary sales file into clear decisions: what to reorder, what to discount
+      and what to stop stocking. It combines data cleaning and analytics with machine learning, in an interactive web app.</p>
+    <div class="btns">
+      <a class="btn primary" href="https://shelfsense-vanshika.streamlit.app" target="_blank" rel="noopener">▶ Launch the live app</a>
+      <a class="btn" href="https://github.com/vanshika745/ShelfSense" target="_blank" rel="noopener">⌥ View code on GitHub</a>
+    </div>
+    <img class="shot" src="assets/dashboard.png" alt="ShelfSense dashboard with revenue KPIs and monthly revenue chart">
+  </div>
+
+  <section>
+    <h2>The problem</h2>
+    <p class="sub">Kirana stores, pharmacies and small retailers lose money three ways: stock that never sells, stock that
+      expires, and their best products running out. Big retailers have analytics teams to prevent this. Small shops reorder by
+      guesswork, even though their billing software already records every sale.</p>
+    <div class="flow">
+      <span>Upload sales file</span><i>→</i><span>Clean &amp; check</span><i>→</i><span>Analyse</span><i>→</i>
+      <span>AI predictions</span><i>→</i><span>Reorder plan</span><i>→</i><span>Report</span>
+    </div>
+  </section>
+
+  <section id="features">
+    <h2>What it does</h2>
+    <p class="sub">Works with any shop's CSV or Excel file: columns are detected automatically (e.g. <em>Bill No, Item Name,
+      Qty, Rate</em>), with support for ₹ prices and DD/MM/YYYY dates.</p>
+    <div class="grid">
+      <div class="card"><div class="ic">🧹</div><h3>Data quality &amp; cleaning</h3><p>Finds duplicates, returns, cancelled orders, fee lines and bad prices, and logs every fix and why.</p></div>
+      <div class="card"><div class="ic">📊</div><h3>Sales dashboard</h3><p>KPIs, monthly trends, top products, busiest days and hours, returns.</p></div>
+      <div class="card"><div class="ic">🔤</div><h3>ABC-XYZ analysis</h3><p>Which few products earn 80% of revenue, and how predictable their demand is.</p></div>
+      <div class="card"><div class="ic">🤖</div><h3>AI dead-stock risk</h3><p>Random Forest predicts which products will sell nothing in the next 30–90 days.</p></div>
+      <div class="card"><div class="ic">📈</div><h3>AI demand forecast</h3><p>Gradient Boosting forecasts next-4-week demand, tested against simple methods.</p></div>
+      <div class="card"><div class="ic">📦</div><h3>Reorder &amp; expiry plan</h3><p>Safety stock, reorder points, overstock and expiry-risk lists with suggested actions.</p></div>
+      <div class="card"><div class="ic">🔮</div><h3>What-if simulator</h3><p>Change demand, lead time or service level and see the effect instantly.</p></div>
+      <div class="card"><div class="ic">📄</div><h3>Downloadable reports</h3><p>HTML report, Excel workbook and cleaned data in one click.</p></div>
+    </div>
+  </section>
+
+  <section id="ai">
+    <h2>Tested on real data</h2>
+    <p class="sub">Built and evaluated on the UCI <em>Online Retail II</em> dataset: 1,067,371 real transactions of a UK
+      giftware retailer (Dec 2009 – Dec 2011, CC BY 4.0). Every number below was produced by the project code.</p>
+    <div class="stats">
+      <div class="stat"><b>996,940</b><span>clean sales lines from 1,067,371 raw rows, via an 8-step logged cleaning</span></div>
+      <div class="stat"><b>22%</b><span>of products (831 of 3,755) earn 80% of revenue</span></div>
+      <div class="stat"><b>0.96</b><span>ROC-AUC for dead-stock prediction on an unseen period</span></div>
+      <div class="stat"><b>−0.8%</b><span>forecast bias for the AI, vs −9.5% for the simple method</span></div>
+    </div>
+
+    <div class="two" style="margin-top:34px">
+      <div>
+        <h3>Dead-stock prediction (next 60 days)</h3>
+        <div class="tbl"><table>
+          <tr><th>Model</th><th>ROC-AUC</th><th>Recall</th><th>F1</th></tr>
+          <tr><td>Rule: no sale in 60 days</td><td>0.954</td><td>0.831</td><td>0.807</td></tr>
+          <tr><td>Logistic Regression</td><td>0.950</td><td>0.922</td><td>0.766</td></tr>
+          <tr class="best"><td>Random Forest ✓</td><td>0.960</td><td>0.913</td><td>0.806</td></tr>
+        </table></div>
+      </div>
+      <div>
+        <h3>4-week demand forecast</h3>
+        <div class="tbl"><table>
+          <tr><th>Method</th><th>WAPE %</th><th>Bias %</th></tr>
+          <tr><td>Naive (last 4 weeks)</td><td>42.17</td><td>−9.51</td></tr>
+          <tr><td>Moving average (12 wk)</td><td>47.27</td><td>−18.55</td></tr>
+          <tr><td>Seasonal naive</td><td>63.69</td><td>+19.52</td></tr>
+          <tr class="best"><td>Gradient Boosting ✓</td><td>42.29</td><td>−0.79</td></tr>
+        </table></div>
+      </div>
+    </div>
+    <p class="note" style="margin-top:14px">Honest takeaway: recency alone is a strong signal. The AI adds value by catching
+      more products that are really going dead (recall 0.91 vs 0.83) and by removing the systematic under-forecasting that
+      causes stock-outs.</p>
+  </section>
+
+  <section id="screens">
+    <h2>Inside the app</h2>
+    <p class="sub">Eight tabs take a shopkeeper from raw file to action list.</p>
+    <div class="gallery">
+      <figure><img src="assets/cleaning.png" alt="Data quality and cleaning log" loading="lazy"><figcaption>Quality &amp; cleaning log</figcaption></figure>
+      <figure><img src="assets/abc_xyz.png" alt="ABC-XYZ analysis" loading="lazy"><figcaption>ABC-XYZ analysis</figcaption></figure>
+      <figure><img src="assets/ai_dead_stock.png" alt="AI dead-stock risk models" loading="lazy"><figcaption>AI: dead-stock risk</figcaption></figure>
+      <figure><img src="assets/ai_forecast.png" alt="AI demand forecast" loading="lazy"><figcaption>AI: demand forecast</figcaption></figure>
+      <figure><img src="assets/reorder_stock.png" alt="Reorder and stock plan" loading="lazy"><figcaption>Reorder &amp; stock plan (demo uses simulated stock)</figcaption></figure>
+      <figure><img src="assets/dashboard.png" alt="Sales dashboard" loading="lazy"><figcaption>Sales dashboard</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Built with</h2>
+    <div class="chips">
+      <span>Python</span><span>pandas</span><span>NumPy</span><span>scikit-learn</span><span>Plotly</span><span>Streamlit</span><span>openpyxl</span>
+    </div>
+    <p class="note" style="margin-top:14px">Runs entirely on free, open-source tools. No paid AI APIs; when run locally, no data leaves the computer.
+      Supports UN SDG 12: Responsible Consumption and Production.</p>
+  </section>
+
+  <section id="about">
+    <h2>About the project</h2>
+    <p class="sub" style="margin-bottom:10px">Built by <strong>Vanshika Solanki</strong>, BCA student at Sri Balaji University, Pune,
+      for the IBM SkillsBuild Data Analytics with AI Internship 2026, offered by BharatCares in association with AICTE.</p>
+    <div class="btns">
+      <a class="btn primary" href="https://shelfsense-vanshika.streamlit.app" target="_blank" rel="noopener">▶ Try ShelfSense</a>
+      <a class="btn" href="https://github.com/vanshika745/ShelfSense" target="_blank" rel="noopener">GitHub repository</a>
+      <a class="btn" href="https://archive.ics.uci.edu/dataset/502/online+retail+ii" target="_blank" rel="noopener">Dataset (UCI)</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">ShelfSense · Vanshika Solanki · 2026 · Dataset: Chen, D. (2012), <em>Online Retail II</em>, UCI Machine Learning Repository, CC BY 4.0</div>
+</footer>
+</body>
+</html>
