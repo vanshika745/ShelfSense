@@ -9,7 +9,7 @@ ShelfSense is an interactive data analytics and AI web app. A shopkeeper uploads
 - tells the shopkeeper **what to reorder, what to discount and what to stop stocking**,
 - produces downloadable reports.
 
-🔗 **Live app:** https://shelfsense-vanshika.streamlit.app  ·  **Project page:** _coming soon_
+🔗 **Live app:** https://vanshika-shelfsense.streamlit.app  ·  **Project page:** https://vanshika-shelfsense.vercel.app
 
 > Project for the **IBM SkillsBuild Data Analytics with AI Internship 2026** (BharatCares in association with AICTE) · Supports **UN SDG 12: Responsible Consumption and Production**
 
@@ -35,7 +35,7 @@ Kirana stores, pharmacies and small retailers lose money in three ways: stock th
 | 📦 **Reorder & stock** | Safety stock, reorder point and order-up-to level. Upload a stock sheet to get **Reorder now / Dead stock / Overstocked / Expiry risk** lists with suggested actions. |
 | 🔮 **What-if** | Change demand, lead time and service level and see the effect; clearance-sale cash calculator. |
 | 📄 **Reports** | HTML report (can be printed to PDF), Excel workbook with all tables, cleaned CSV. |
-| 🔒 **Privacy** | Runs 100% on your computer. No paid APIs, no cloud, no data leaves the machine. |
+| 🔒 **Privacy** | No paid APIs. Run locally, no data leaves your computer; the online demo processes files on the app server for your session only. |
 
 ## Dataset
 
@@ -93,7 +93,7 @@ streamlit run VanshikaSolanki_ShelfSense.py
 2. On the **Data** tab, check the column mapping and press **🚀 Clean & analyse**.
 3. Explore the tabs: Quality & Cleaning → Dashboard → ABC-XYZ → AI Insights → Reorder & Stock → What-if → Report.
 
-For the full 1-million-row demo, the first analysis takes about 1.5–3 minutes (the quick demo about 40 seconds). After that every tab responds instantly. Small shop files take a few seconds.
+For the full 1-million-row demo, the first analysis takes about 1.5–3 minutes (the quick demo about 40 seconds). The online version offers the quick demo only, because the free cloud server has limited memory. After that every tab responds instantly. Small shop files take a few seconds.
 
 **Command-line mode** (runs the full analysis and saves `outputs/ShelfSense_Report.html`, `outputs/ShelfSense_Results.xlsx` and `outputs/results_summary.json`):
 

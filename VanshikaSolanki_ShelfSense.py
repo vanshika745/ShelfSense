@@ -60,6 +60,8 @@ DEMO_CSV = DATA_DIR / "online_retail_II.csv"
 DEMO_XLSX = DATA_DIR / "online_retail_II.xlsx"
 DATASET_URL = "https://archive.ics.uci.edu/dataset/502/online+retail+ii"
 RANDOM_STATE = 42
+# True when running on Streamlit Community Cloud (code is mounted under /mount/src)
+ONLINE = Path(__file__).resolve().as_posix().startswith("/mount/src")
 
 # Column mapping: field -> (label shown to the user, required?, known column names)
 FIELDS = {
@@ -1167,11 +1169,16 @@ def app():
     # ---------------- Sidebar ----------------
     with st.sidebar:
         st.header("1. Data")
-        src = st.radio("Sales data source", ["Upload my file", "Demo: UCI Online Retail II",
-                                             "Demo (quick): last 12 months"],
+        sources = ["Upload my file", "Demo (quick): last 12 months"] if ONLINE else \
+            ["Upload my file", "Demo: UCI Online Retail II", "Demo (quick): last 12 months"]
+        src = st.radio("Sales data source", sources,
                        help="Demo = 1 million real transactions of a UK gift wholesaler (2009-2011). "
                             "Quick demo = the last 12 months only (about 540,000 rows): faster and "
                             "lighter, recommended for the online version.")
+        if ONLINE:
+            st.caption("Online version: the quick demo and files up to about 200,000 rows run best. "
+                       "The full 1-million-row demo is available when ShelfSense is run on your own "
+                       "computer (see the GitHub README).")
         raw, file_key, source = None, None, None
         if src == "Upload my file":
             up = st.file_uploader("Sales file (CSV or Excel)", type=["csv", "xlsx", "xls"])
@@ -1221,8 +1228,13 @@ def app():
                     "- Optional: price, bill no., customer, branch")
         c2.markdown("**What you get**\n- Data quality check & cleaning log\n- ABC-XYZ analysis\n"
                     "- AI dead-stock risk & demand forecast\n- Reorder / discount / delist lists")
-        c3.markdown("**Privacy**\n- Everything runs on this computer\n- No data is uploaded to any "
-                    "external service")
+        if ONLINE:
+            c3.markdown("**Privacy**\n- Online demo: files are processed on this app's server for your "
+                        "session only and are not saved\n- For private data, run ShelfSense on your own "
+                        "computer: then nothing leaves it")
+        else:
+            c3.markdown("**Privacy**\n- Everything runs on this computer\n- No data is uploaded to any "
+                        "external service")
         return
 
     tabs = st.tabs(["📥 Data", "🧹 Quality & Cleaning", "📊 Dashboard", "🔤 ABC-XYZ",
