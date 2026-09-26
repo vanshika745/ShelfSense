@@ -55,6 +55,7 @@ APP_DIR = Path(__file__).resolve().parent
 DATA_DIR = APP_DIR / "data"
 OUTPUT_DIR = APP_DIR / "outputs"
 DEMO_PARQUET = DATA_DIR / "online_retail_II.parquet"   # compact copy (6 MB), used online
+QUICK_PARQUET = DATA_DIR / "online_retail_II_last12m.parquet"   # last 12 months only (3 MB)
 DEMO_CSV = DATA_DIR / "online_retail_II.csv"
 DEMO_XLSX = DATA_DIR / "online_retail_II.xlsx"
 DATASET_URL = "https://archive.ics.uci.edu/dataset/502/online+retail+ii"
@@ -164,15 +165,29 @@ def read_table(data: bytes, name: str) -> pd.DataFrame:
 QUICK_DEMO_START = "2010-12-01"   # quick demo = last 12 months of the dataset
 
 
+def _read_parquet_lean(path, **kw):
+    """Read Parquet and hand Arrow's buffers back to the system afterwards, which
+    keeps memory low on small cloud servers."""
+    df = pd.read_parquet(path, **kw)
+    try:
+        import pyarrow as pa
+        pa.default_memory_pool().release_unused()
+    except Exception:
+        pass
+    return df
+
+
 def load_demo_data(quick=False) -> pd.DataFrame:
     """Load the UCI Online Retail II demo dataset from data/. The compact Parquet
     copy is used when present; otherwise the Excel file is converted to CSV once,
     because reading 1 million Excel rows is slow. quick=True returns only the
     last 12 months (about 560k rows), which needs about half the memory."""
+    if quick and QUICK_PARQUET.is_file():
+        return _read_parquet_lean(QUICK_PARQUET)
     if DEMO_PARQUET.is_file():
         if quick:
-            return pd.read_parquet(DEMO_PARQUET, filters=[("InvoiceDate", ">=", QUICK_DEMO_START)])
-        return pd.read_parquet(DEMO_PARQUET)
+            return _read_parquet_lean(DEMO_PARQUET, filters=[("InvoiceDate", ">=", QUICK_DEMO_START)])
+        return _read_parquet_lean(DEMO_PARQUET)
     if quick:
         d = load_demo_data()
         return d[d["InvoiceDate"].astype("string") >= QUICK_DEMO_START].reset_index(drop=True)
@@ -629,8 +644,9 @@ def train_dead_stock_model(sales, extras, horizon, progress=None):
     metrics = pd.DataFrame(rows)
     best = metrics.iloc[1:].sort_values("ROC-AUC", ascending=False).iloc[0]["Model"]
 
+    # n_jobs=1: parallel workers would each copy the data (too much memory online)
     imp = permutation_importance(models[best], Xva, yva, scoring="roc_auc", n_repeats=5,
-                                 random_state=RANDOM_STATE, n_jobs=-1)
+                                 random_state=RANDOM_STATE, n_jobs=1)
     importance = pd.DataFrame({"feature": DEAD_FEATURES, "importance": imp.importances_mean}) \
         .sort_values("importance", ascending=False)
 
